@@ -2,8 +2,27 @@ export interface Category {
   id: string
   name: string
   name_en?: string
+  icon?: string
+  icon_type?: 'emoji' | 'image'
   is_active: boolean
   sort_order: number
+  created_at: string
+}
+
+export interface Discount {
+  id: string
+  type: 'percentage' | 'fixed' | 'free_shipping'
+  code?: string
+  percentage_value?: number
+  fixed_value?: number
+  product_ids?: string[]
+  category_ids?: string[]
+  min_purchase?: number
+  max_uses?: number
+  used_count: number
+  valid_from: string
+  valid_until: string
+  is_active: boolean
   created_at: string
 }
 
@@ -13,6 +32,7 @@ export interface Product {
   name_en?: string
   description?: string
   price: number
+  original_price?: number
   image_url?: string
   // JSON.stringify(string[]) لمصفوفة روابط صور إضافية للمنتج (Gallery)
   // أول صورة بالمصفوفة تُستخدم أيضًا كنسخة من image_url (صورة الغلاف)
@@ -33,6 +53,8 @@ export interface Order {
   address?: string
   total: number
   delivery_fee: number
+  discount_applied?: string
+  discount_amount?: number
   status: 'pending' | 'confirmed' | 'delivered' | 'cancelled'
   notes?: string
   created_at: string
@@ -72,6 +94,7 @@ export interface Settings {
   hero_slides_json?: string
   // JSON.stringify(PromoCard[]) - يُقرأ ويُكتب من صفحة /admin/content
   promo_cards_json?: string
+  free_shipping_categories?: string
 }
 
 export interface CartItem {
