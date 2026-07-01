@@ -3,15 +3,17 @@ import {
   getCategoriesAdmin,
   getSettingsAdmin,
   getPaymentMethodsAdmin,
+  getDiscountsAdmin,
 } from '@/lib/admin-actions'
 import AdminDashboard from '@/components/admin/AdminDashboard'
 
 export default async function AdminPage() {
-  const [products, categories, settings, paymentMethods] = await Promise.all([
+  const [products, categories, settings, paymentMethods, discounts] = await Promise.all([
     getProductsAdmin(),
     getCategoriesAdmin(),
     getSettingsAdmin(),
     getPaymentMethodsAdmin(),
+    getDiscountsAdmin(),
   ])
 
   return (
@@ -20,6 +22,7 @@ export default async function AdminPage() {
       initialCategories={categories}
       initialSettings={settings}
       initialPaymentMethods={paymentMethods}
+      initialDiscounts={discounts}
     />
   )
 }

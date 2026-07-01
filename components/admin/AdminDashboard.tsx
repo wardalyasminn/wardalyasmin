@@ -2,26 +2,29 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Product, Category, PaymentMethod } from '@/lib/types'
+import { Product, Category, PaymentMethod, Discount } from '@/lib/types'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import ProductsManager from './ProductsManager'
 import CategoriesManager from './CategoriesManager'
 import SettingsManager from './SettingsManager'
 import PaymentMethodsManager from './PaymentMethodsManager'
+import DiscountsManager from './DiscountsManager'
 import ContentManager from './ContentManager'
 
-type Tab = 'products' | 'categories' | 'payment_methods' | 'settings' | 'content'
+type Tab = 'products' | 'categories' | 'payment_methods' | 'discounts' | 'settings' | 'content'
 
 export default function AdminDashboard({
   initialProducts,
   initialCategories,
   initialSettings,
   initialPaymentMethods,
+  initialDiscounts,
 }: {
   initialProducts: Product[]
   initialCategories: Category[]
   initialSettings: Record<string, string>
   initialPaymentMethods: PaymentMethod[]
+  initialDiscounts: Discount[]
 }) {
   const [tab, setTab] = useState<Tab>('products')
   const router = useRouter()
@@ -37,6 +40,7 @@ export default function AdminDashboard({
     { id: 'products', label: 'المنتجات' },
     { id: 'categories', label: 'التصنيفات' },
     { id: 'payment_methods', label: 'طرق الدفع' },
+    { id: 'discounts', label: 'الخصومات' },
     { id: 'content', label: 'الواجهة الرئيسية' },
     { id: 'settings', label: 'الإعدادات' },
   ]
@@ -152,6 +156,13 @@ export default function AdminDashboard({
           {tab === 'categories' && <CategoriesManager initialCategories={initialCategories} />}
           {tab === 'payment_methods' && (
             <PaymentMethodsManager initialPaymentMethods={initialPaymentMethods} />
+          )}
+          {tab === 'discounts' && (
+            <DiscountsManager
+              initialDiscounts={initialDiscounts}
+              products={initialProducts}
+              categories={initialCategories}
+            />
           )}
           {tab === 'content' && (
             <ContentManager initialSettings={initialSettings} categories={initialCategories} />

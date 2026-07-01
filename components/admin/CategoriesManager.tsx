@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Category } from '@/lib/types'
 import { createCategory, updateCategory, deleteCategory } from '@/lib/admin-actions'
+import ImageUploader from './ImageUploader'
 
 export default function CategoriesManager({
   initialCategories,
@@ -14,7 +15,7 @@ export default function CategoriesManager({
   const [saving, setSaving] = useState(false)
 
   function startNew() {
-    setEditing({ name: '', name_en: '', is_active: true, sort_order: categories.length })
+    setEditing({ name: '', name_en: '', icon: '🎁', icon_type: 'emoji', is_active: true, sort_order: categories.length })
   }
 
   async function handleSave() {
@@ -65,6 +66,14 @@ export default function CategoriesManager({
     transition: 'border-color 0.2s',
   }
 
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '13px',
+    marginBottom: '6px',
+    color: '#9c7d8a',
+    fontWeight: 600,
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontFamily: 'Tajawal, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -106,6 +115,13 @@ export default function CategoriesManager({
               gap: '12px',
             }}
           >
+            <div style={{ fontSize: '24px', minWidth: '30px' }}>
+              {c.icon_type === 'image' && c.icon ? (
+                <img src={c.icon} alt={c.name} style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover' }} />
+              ) : (
+                c.icon || '🎁'
+              )}
+            </div>
             <div style={{ flex: 1 }}>
               <p style={{ fontWeight: 600, color: '#5a4a4a', margin: 0, fontSize: '14px' }}>
                 {c.name}
@@ -193,6 +209,35 @@ export default function CategoriesManager({
               onFocus={(e) => (e.currentTarget.style.borderColor = '#d4779a')}
               onBlur={(e) => (e.currentTarget.style.borderColor = '#f0d9e3')}
             />
+
+            <div>
+              <label style={labelStyle}>نوع الأيقونة</label>
+              <select
+                value={editing.icon_type || 'emoji'}
+                onChange={(e) => setEditing({ ...editing, icon_type: e.target.value as any })}
+                style={inputStyle}
+              >
+                <option value="emoji">إيموجي</option>
+                <option value="image">صورة</option>
+              </select>
+            </div>
+
+            {editing.icon_type === 'emoji' ? (
+              <input
+                placeholder="مثال: 🌷 أو 🎁"
+                value={editing.icon || ''}
+                onChange={(e) => setEditing({ ...editing, icon: e.target.value })}
+                style={inputStyle}
+                maxLength={2}
+                onFocus={(e) => (e.currentTarget.style.borderColor = '#d4779a')}
+                onBlur={(e) => (e.currentTarget.style.borderColor = '#f0d9e3')}
+              />
+            ) : (
+              <ImageUploader
+                value={editing.icon}
+                onChange={(url) => setEditing({ ...editing, icon: url })}
+              />
+            )}
 
             <input
               type="number"
