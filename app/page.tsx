@@ -1,13 +1,14 @@
 import { supabase } from '@/lib/supabase'
-import { Product, Category, Settings, PaymentMethod } from '@/lib/types'
+import { Product, Category, Settings, PaymentMethod, Discount } from '@/lib/types'
 import StorePage from '@/components/StorePage'
 
 async function getData() {
-  const [productsRes, categoriesRes, settingsRes, paymentMethodsRes] = await Promise.all([
+  const [productsRes, categoriesRes, settingsRes, paymentMethodsRes, discountsRes] = await Promise.all([
     supabase.from('products').select('*, category:categories(*)').eq('is_available', true).order('sort_order'),
     supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
     supabase.from('settings').select('*'),
     supabase.from('payment_methods').select('*').eq('is_active', true).order('sort_order'),
+    supabase.from('discounts').select('*').eq('is_active', true),
   ])
 
   const settings: Settings = {
@@ -28,17 +29,19 @@ async function getData() {
     categories: (categoriesRes.data as Category[]) || [],
     settings,
     paymentMethods: (paymentMethodsRes.data as PaymentMethod[]) || [],
+    discounts: (discountsRes.data as Discount[]) || [],
   }
 }
 
 export default async function Home() {
-  const { products, categories, settings, paymentMethods } = await getData()
+  const { products, categories, settings, paymentMethods, discounts } = await getData()
   return (
     <StorePage
       products={products}
       categories={categories}
       settings={settings}
       paymentMethods={paymentMethods}
+      discounts={discounts}
     />
   )
 }
