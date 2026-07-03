@@ -14,10 +14,12 @@ export async function middleware(request: NextRequest) {
     supabaseAdmin
       .from('site_visits')
       .insert({})
-      .then(() => {})
-      .catch(() => {
-        // تجاهل أي خطأ حتى ما يأثر على تجربة المستخدم
-      })
+      .then(
+        () => {},
+        () => {
+          // تجاهل أي خطأ حتى ما يأثر على تجربة المستخدم
+        }
+      )
 
     return response
   }
