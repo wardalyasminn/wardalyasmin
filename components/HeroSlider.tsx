@@ -59,22 +59,22 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           </div>
         ))}
 
-        <div className="relative z-10 h-full max-w-7xl mx-auto px-6 flex items-center">
-          <div className={`w-full md:max-w-[46%] ${isRtl ? "text-right md:mr-0 md:ml-auto" : "text-left md:ml-0 md:mr-auto"}`}>
-            <h1 className="text-3xl md:text-5xl font-black text-slate-800 leading-tight mb-3 transition-all duration-700">
+        <div className="relative z-10 h-full max-w-7xl mx-auto px-4 sm:px-6 flex items-center">
+          <div className={`w-[75%] sm:w-[60%] md:max-w-[46%] ${isRtl ? "text-right md:mr-0 md:ml-auto" : "text-left md:ml-0 md:mr-auto"}`}>
+            <h1 className="text-lg sm:text-2xl md:text-4xl lg:text-5xl font-black text-slate-800 leading-tight mb-1.5 sm:mb-3 transition-all duration-700">
               {slide.title}
             </h1>
             {slide.subtitle && (
-              <p className="text-lg md:text-2xl font-bold text-[#E8638A] mb-3">
+              <p className="text-xs sm:text-base md:text-xl lg:text-2xl font-bold text-[#E8638A] mb-1.5 sm:mb-3">
                 {slide.subtitle}
               </p>
             )}
-            <p className="text-sm md:text-lg text-slate-500 mb-8 leading-relaxed">
+            <p className="hidden sm:block text-sm md:text-lg text-slate-500 mb-4 md:mb-8 leading-relaxed">
               {slide.desc}
             </p>
             <Link
               href="/products"
-              className="inline-block bg-[#E8638A] text-white px-8 md:px-12 py-3 md:py-4 rounded-full font-bold text-sm md:text-lg shadow-xl hover:bg-[#d4547a] transition-all"
+              className="inline-block bg-[#E8638A] text-white px-4 py-1.5 text-xs sm:px-8 sm:py-3 sm:text-base md:px-12 md:py-4 md:text-lg rounded-full font-bold shadow-xl hover:bg-[#d4547a] transition-all"
             >
               {t("shop_now")}
             </Link>
@@ -82,14 +82,14 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         </div>
 
         {list.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          <div className="absolute bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
             {list.map((_, i) => (
               <button
                 key={i}
                 aria-label={language === "ar" ? `الشريحة ${i + 1}` : `Slide ${i + 1}`}
                 onClick={() => setIndex(i)}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  i === index ? "bg-[#E8638A] w-7" : "bg-gray-300 w-2.5"
+                className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 ${
+                  i === index ? "bg-[#E8638A] w-5 sm:w-7" : "bg-gray-300 w-2 sm:w-2.5"
                 }`}
               />
             ))}
