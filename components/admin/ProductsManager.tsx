@@ -88,7 +88,7 @@ export default function ProductsManager({
           <h2 className="text-lg font-bold mb-6 text-[#d4637d]">
             {formData.id ? "تعديل المنتج الحالي" : "إضافة منتج جديد للمتجر"}
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-1">
               <label className="block text-xs font-black text-gray-400 mb-3 mr-4 uppercase">صور المنتج</label>
@@ -137,6 +137,18 @@ export default function ProductsManager({
                   placeholder="اتركه فارغاً إذا لا يوجد خصم"
                   value={formData.discount_price || ""}
                   onChange={e => setFormData({ ...formData, discount_price: Number(e.target.value) })}
+                />
+              </div>
+
+              {/* وصف المنتج — يظهر للعميل بصفحة تفاصيل المنتج */}
+              <div className="md:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold text-gray-500 mr-2">وصف المنتج (يظهر للعميل بصفحة المنتج)</label>
+                <textarea
+                  className="w-full p-4 bg-white rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-[#d4637d] border-none resize-none"
+                  placeholder="مثلاً: باقة ورد جوري طبيعي مع شوكولاتة فاخرة، مثالية للمناسبات الخاصة..."
+                  rows={4}
+                  value={formData.description || ""}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 

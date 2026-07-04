@@ -22,6 +22,11 @@ export default function SettingsManager({
   const [commercialRegister, setCommercialRegister] = useState(initialSettings.commercial_register || '')
   const [maroofBadgeUrl, setMaroofBadgeUrl] = useState(initialSettings.maroof_badge_url || '')
   const [footerCopyrightText, setFooterCopyrightText] = useState(initialSettings.footer_copyright_text || '')
+  // نص الوصف الترويجي أعلى الفوتر (كان ثابت بالكود، الحين قابل للتعديل)
+  const [footerDescText, setFooterDescText] = useState(initialSettings.footer_desc_text || '')
+  // رابط الدفع / الحساب البنكي اللي يظهر بالفوتر
+  const [paymentLinkLabel, setPaymentLinkLabel] = useState(initialSettings.payment_link_label || '')
+  const [paymentLinkUrl, setPaymentLinkUrl] = useState(initialSettings.payment_link_url || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -42,6 +47,9 @@ export default function SettingsManager({
         commercial_register: commercialRegister,
         maroof_badge_url: maroofBadgeUrl,
         footer_copyright_text: footerCopyrightText,
+        footer_desc_text: footerDescText,
+        payment_link_label: paymentLinkLabel,
+        payment_link_url: paymentLinkUrl,
       })
       setSaved(true)
     } catch (err) {
@@ -64,6 +72,13 @@ export default function SettingsManager({
     outline: 'none',
     boxSizing: 'border-box',
     transition: 'border-color 0.2s',
+  }
+
+  const textareaStyle: React.CSSProperties = {
+    ...inputStyle,
+    resize: 'vertical',
+    minHeight: '80px',
+    lineHeight: 1.7,
   }
 
   const labelStyle: React.CSSProperties = {
@@ -91,10 +106,10 @@ export default function SettingsManager({
     margin: '4px 0 0',
   }
 
-  function focusPink(e: React.FocusEvent<HTMLInputElement>) {
+  function focusPink(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
     e.currentTarget.style.borderColor = '#d4779a'
   }
-  function blurGray(e: React.FocusEvent<HTMLInputElement>) {
+  function blurGray(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
     e.currentTarget.style.borderColor = '#f0d9e3'
   }
 
@@ -209,6 +224,21 @@ export default function SettingsManager({
         <h3 style={sectionTitleStyle}>إعدادات الفوتر (أسفل الموقع)</h3>
 
         <div>
+          <label style={labelStyle}>النص الترويجي أعلى الفوتر</label>
+          <textarea
+            value={footerDescText}
+            onChange={(e) => { setFooterDescText(e.target.value); setSaved(false) }}
+            style={textareaStyle}
+            placeholder="تشكيلة فاخرة من الهدايا والورد لجميع مناسباتكم السعيدة – بريدة، القصيم."
+            onFocus={focusPink}
+            onBlur={blurGray}
+          />
+          <p style={{ fontSize: '12px', color: '#b0a39c', marginTop: '6px' }}>
+            اتركه فارغاً لاستخدام النص الافتراضي.
+          </p>
+        </div>
+
+        <div>
           <label style={labelStyle}>رابط حساب إنستقرام</label>
           <input
             type="text"
@@ -294,6 +324,40 @@ export default function SettingsManager({
           />
           <p style={{ fontSize: '12px', color: '#b0a39c', marginTop: '6px' }}>
             اتركه فارغاً لاستخدام نص افتراضي تلقائي.
+          </p>
+        </div>
+      </div>
+
+      {/* قسم رابط الدفع / الحساب البنكي */}
+      <div style={cardBoxStyle}>
+        <h3 style={sectionTitleStyle}>رابط الدفع / الحساب البنكي (يظهر بالفوتر)</h3>
+
+        <div>
+          <label style={labelStyle}>نص الرابط (العنوان اللي يظهر للعميل)</label>
+          <input
+            type="text"
+            value={paymentLinkLabel}
+            onChange={(e) => { setPaymentLinkLabel(e.target.value); setSaved(false) }}
+            style={inputStyle}
+            placeholder="مثال: الدفع عبر تحويل بنكي / رابط الدفع الإلكتروني"
+            onFocus={focusPink}
+            onBlur={blurGray}
+          />
+        </div>
+
+        <div>
+          <label style={labelStyle}>الرابط نفسه</label>
+          <input
+            type="text"
+            value={paymentLinkUrl}
+            onChange={(e) => { setPaymentLinkUrl(e.target.value); setSaved(false) }}
+            style={inputStyle}
+            placeholder="https://... أو رابط صفحة تفاصيل الحساب البنكي"
+            onFocus={focusPink}
+            onBlur={blurGray}
+          />
+          <p style={{ fontSize: '12px', color: '#b0a39c', marginTop: '6px' }}>
+            اتركه فارغاً لإخفاء هذا الرابط نهائياً من الفوتر.
           </p>
         </div>
       </div>

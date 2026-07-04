@@ -3,6 +3,77 @@ import { useState, useRef, useEffect } from "react";
 import { uploadImage } from "@/lib/admin-actions";
 import Image from "next/image";
 
+// أقصى عرض/طول مسموح للصورة بعد الضغط (بالبكسل)
+const MAX_DIMENSION = 1600;
+// جودة الضغط لصيغة JPEG (0 إلى 1)
+const JPEG_QUALITY = 0.82;
+
+/**
+ * تضغط أي صورة تلقائياً بالمتصفح قبل رفعها:
+ * - تصغّر أبعادها إذا كانت أكبر من MAX_DIMENSION
+ * - تحوّلها لصيغة JPEG بجودة عالية بس بحجم أقل بكثير
+ * هذا يشتغل تلقائياً على أي جهاز يرفع منه أي شخص، بدون أي إعداد يدوي.
+ */
+async function compressImage(file: File): Promise<File> {
+  // لو الملف مو صورة (حالة نادرة)، رجّعيه كما هو
+  if (!file.type.startsWith("image/")) return file;
+
+  return new Promise((resolve) => {
+    const img = document.createElement("img");
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.onload = () => {
+        let { width, height } = img;
+
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          if (width > height) {
+            height = Math.round((height * MAX_DIMENSION) / width);
+            width = MAX_DIMENSION;
+          } else {
+            width = Math.round((width * MAX_DIMENSION) / height);
+            height = MAX_DIMENSION;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+
+        if (!ctx) {
+          resolve(file); // فشل الرسم؟ ارفعي الأصلية بدل ما توقفي العملية
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+            const compressedFile = new File(
+              [blob],
+              file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+              { type: "image/jpeg" }
+            );
+            // لو الضغط ما قلّل الحجم فعلياً (صورة صغيرة أصلاً)، خلي الأصلية
+            resolve(compressedFile.size < file.size ? compressedFile : file);
+          },
+          "image/jpeg",
+          JPEG_QUALITY
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 // يدعم طريقتين للاستخدام:
 // 1) <ImageUploader onUpload={(url) => ...} defaultImage={product.image_url} />
 // 2) <ImageUploader value={slide.image_url} onChange={(url) => ...} />
@@ -47,10 +118,13 @@ export default function ImageUploader({
     if (!file) return;
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
 
     try {
+      const compressed = await compressImage(file);
+
+      const formData = new FormData();
+      formData.append("file", compressed);
+
       const url = await uploadImage(formData);
       emitChange(url);
     } catch (err) {
@@ -99,7 +173,7 @@ export default function ImageUploader({
                 >
                   <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>
                 </svg>
-                <span className="text-xs font-bold text-gray-500">جاري الرفع...</span>
+                <span className="text-xs font-bold text-gray-500">جاري الضغط والرفع...</span>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
