@@ -2,7 +2,6 @@ export interface Category {
   id: string
   name: string
   name_en?: string
-  image_url?: string
   is_active: boolean
   sort_order: number
   created_at: string
@@ -26,6 +25,10 @@ export interface Product {
   is_new?: boolean
   sort_order: number
   created_at: string
+  // رمز المنتج (SKU) — تجهيز لربط أنظمة الكاشير السحابية مستقبلاً
+  sku?: string
+  // الكمية المتوفرة بالمخزون
+  stock_quantity?: number
 }
 export interface Order {
   id: string
@@ -33,6 +36,8 @@ export interface Order {
   customer_phone: string
   delivery_type: 'pickup' | 'delivery'
   address?: string
+  // رابط اختياري لموقع العميل على قوقل ماب
+  location_url?: string
   total: number
   delivery_fee: number
   status: 'pending' | 'confirmed' | 'delivered' | 'cancelled'
@@ -87,6 +92,11 @@ export interface Settings {
   maroof_badge_url?: string
   // نص حقوق النشر أسفل الفوتر (قابل للتعديل بالكامل من الأدمن)
   footer_copyright_text?: string
+  // النص الترويجي أعلى الفوتر (قابل للتعديل من الأدمن)
+  footer_desc_text?: string
+  // رابط الدفع / الحساب البنكي بالفوتر
+  payment_link_label?: string
+  payment_link_url?: string
   // JSON.stringify(HeroSlide[]) - يُقرأ ويُكتب من صفحة /admin/content
   hero_slides_json?: string
   // JSON.stringify(PromoCard[]) - يُقرأ ويُكتب من صفحة /admin/content

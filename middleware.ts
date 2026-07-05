@@ -2,6 +2,37 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+// كلمات مفتاحية تدل على بوتات محركات البحث أو أدوات المراقبة (Uptime monitors)
+// أي User-Agent يحتوي على واحدة منها، ما تُحسب زيارته ضمن الإحصائيات
+const BOT_OR_MONITOR_PATTERNS = [
+  'bot',
+  'crawl',
+  'spider',
+  'slurp',
+  'uptimerobot',
+  'better uptime',
+  'betteruptime',
+  'betterstack',
+  'pingdom',
+  'statuscake',
+  'monitor',
+  'facebookexternalhit',
+  'whatsapp',
+  'headlesschrome',
+  'lighthouse',
+  'pagespeed',
+  'ahrefsbot',
+  'semrushbot',
+  'mj12bot',
+  'preview',
+]
+
+function isBotOrMonitor(userAgent: string): boolean {
+  const ua = userAgent.toLowerCase()
+  if (!ua) return true // لا يوجد User-Agent إطلاقاً غالباً يعني طلب آلي مو زيارة حقيقية
+  return BOT_OR_MONITOR_PATTERNS.some((pattern) => ua.includes(pattern))
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
 
@@ -10,16 +41,19 @@ export async function middleware(request: NextRequest) {
 
   // تسجيل الزيارة للصفحات العامة فقط (باستثناء لوحة الأدمن)
   // بطريقة fire-and-forget عشان ما يبطّئ تحميل الصفحة
+  // + نستثني بوتات محركات البحث وأدوات المراقبة (UptimeRobot, BetterStack...)
   if (!isAdminPage) {
-    supabaseAdmin
-      .from('site_visits')
-      .insert({})
-      .then(
-        () => {},
-        () => {
+    const userAgent = request.headers.get('user-agent') || ''
+
+    if (!isBotOrMonitor(userAgent)) {
+      supabaseAdmin
+        .from('site_visits')
+        .insert({})
+        .then(() => {})
+        .catch(() => {
           // تجاهل أي خطأ حتى ما يأثر على تجربة المستخدم
-        }
-      )
+        })
+    }
 
     return response
   }

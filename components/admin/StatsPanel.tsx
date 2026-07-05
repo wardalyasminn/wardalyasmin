@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getDashboardStats } from '@/lib/admin-actions'
+import { getDashboardStats, resetVisitsCount } from '@/lib/admin-actions'
 
 type Stats = {
   ordersCount: number
@@ -13,13 +13,36 @@ export default function StatsPanel() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [resetting, setResetting] = useState(false)
 
-  useEffect(() => {
+  function loadStats() {
+    setLoading(true)
     getDashboardStats()
       .then((data) => setStats(data))
       .catch(() => setError('تعذر تحميل الإحصائيات، حاول مرة أخرى'))
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadStats()
   }, [])
+
+  async function handleReset() {
+    const confirmed = confirm(
+      'سيتم حذف كل سجلات الزيارات المحفوظة وتصفير العداد بشكل نهائي. هل أنت متأكدة من المتابعة؟'
+    )
+    if (!confirmed) return
+
+    setResetting(true)
+    try {
+      await resetVisitsCount()
+      loadStats()
+    } catch {
+      alert('حدث خطأ أثناء تصفير العداد، حاولي مرة أخرى')
+    } finally {
+      setResetting(false)
+    }
+  }
 
   if (loading) {
     return <p style={{ textAlign: 'center', color: '#b0a39c', padding: '40px 0' }}>جاري التحميل...</p>
@@ -68,6 +91,7 @@ export default function StatsPanel() {
           border: '1px solid #f5e6da',
           borderRadius: '16px',
           padding: '20px',
+          marginBottom: '20px',
         }}
       >
         <div style={{ fontSize: '13px', color: '#b0a39c', marginBottom: '6px' }}>
@@ -78,6 +102,46 @@ export default function StatsPanel() {
             ? `🌸 ${stats.topProduct.name} (${stats.topProduct.totalQuantity} قطعة)`
             : 'لا توجد بيانات كافية بعد'}
         </div>
+      </div>
+
+      <div
+        style={{
+          border: '1px dashed #e0c9d2',
+          borderRadius: '16px',
+          padding: '16px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: '#9c7d8a' }}>
+            تصفير عداد الزيارات
+          </div>
+          <div style={{ fontSize: '12px', color: '#b0a39c', marginTop: '2px' }}>
+            يحذف كل سجلات الزيارات المحفوظة بشكل نهائي ويبدأ العد من الصفر
+          </div>
+        </div>
+        <button
+          onClick={handleReset}
+          disabled={resetting}
+          style={{
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#c0392b',
+            backgroundColor: '#fdf0ee',
+            border: '1px solid #f3d4cf',
+            borderRadius: '14px',
+            padding: '10px 18px',
+            cursor: resetting ? 'not-allowed' : 'pointer',
+            opacity: resetting ? 0.6 : 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {resetting ? 'جاري التصفير...' : 'تصفير العداد'}
+        </button>
       </div>
     </div>
   )

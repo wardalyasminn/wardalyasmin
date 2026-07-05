@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Product, Category, PaymentMethod } from '@/lib/types'
+import { Product, Category, PaymentMethod, Order } from '@/lib/types'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import ProductsManager from './ProductsManager'
 import CategoriesManager from './CategoriesManager'
@@ -10,19 +10,22 @@ import SettingsManager from './SettingsManager'
 import PaymentMethodsManager from './PaymentMethodsManager'
 import ContentManager from './ContentManager'
 import StatsPanel from './StatsPanel'
+import OrdersManager from './OrdersManager'
 
-type Tab = 'products' | 'categories' | 'payment_methods' | 'settings' | 'content' | 'stats'
+type Tab = 'products' | 'orders' | 'categories' | 'payment_methods' | 'settings' | 'content' | 'stats'
 
 export default function AdminDashboard({
   initialProducts,
   initialCategories,
   initialSettings,
   initialPaymentMethods,
+  initialOrders,
 }: {
   initialProducts: Product[]
   initialCategories: Category[]
   initialSettings: Record<string, string>
   initialPaymentMethods: PaymentMethod[]
+  initialOrders: Order[]
 }) {
   const [tab, setTab] = useState<Tab>('products')
   const router = useRouter()
@@ -36,6 +39,7 @@ export default function AdminDashboard({
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'products', label: 'المنتجات' },
+    { id: 'orders', label: '📦 الطلبات' },
     { id: 'categories', label: 'التصنيفات' },
     { id: 'payment_methods', label: 'طرق الدفع' },
     { id: 'content', label: 'الواجهة الرئيسية' },
@@ -151,6 +155,7 @@ export default function AdminDashboard({
           {tab === 'products' && (
             <ProductsManager initialProducts={initialProducts} categories={initialCategories} />
           )}
+          {tab === 'orders' && <OrdersManager initialOrders={initialOrders} />}
           {tab === 'categories' && <CategoriesManager initialCategories={initialCategories} />}
           {tab === 'payment_methods' && (
             <PaymentMethodsManager initialPaymentMethods={initialPaymentMethods} />

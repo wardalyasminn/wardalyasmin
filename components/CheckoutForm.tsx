@@ -18,6 +18,7 @@ export default function CheckoutForm({ deliveryFee }: { deliveryFee: string }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [locationUrl, setLocationUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -63,6 +64,7 @@ export default function CheckoutForm({ deliveryFee }: { deliveryFee: string }) {
           customer_phone: phone.trim(),
           delivery_type: deliveryMethod,
           address: deliveryMethod === "delivery" ? address.trim() : null,
+          location_url: deliveryMethod === "delivery" ? (locationUrl.trim() || null) : null,
           total: totalPrice,
           delivery_fee: deliveryMethod === "delivery" ? Number(deliveryFee) : 0,
           notes: notes.trim() || null,
@@ -89,6 +91,9 @@ export default function CheckoutForm({ deliveryFee }: { deliveryFee: string }) {
     lines.push(`${t("wa_delivery_method")} ${deliveryMethod === "delivery" ? t("wa_delivery") : t("wa_pickup")}`);
     if (deliveryMethod === "delivery") {
       lines.push(`${t("wa_address")} ${address}`);
+      if (locationUrl.trim()) {
+        lines.push(`📍 موقع العميل على الخريطة: ${locationUrl.trim()}`);
+      }
       lines.push(`${t("wa_delivery_fee")} ${deliveryFee} ${t("currency")}`);
     }
     lines.push("");
@@ -192,17 +197,36 @@ export default function CheckoutForm({ deliveryFee }: { deliveryFee: string }) {
           </div>
 
           {deliveryMethod === "delivery" && (
-            <div>
-              <label className="block font-bold text-gray-700 mb-2 text-sm">{t("address_label")}</label>
-              <textarea
-                dir={dir}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder={t("address_placeholder")}
-                rows={3}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4637d] resize-none"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block font-bold text-gray-700 mb-2 text-sm">{t("address_label")}</label>
+                <textarea
+                  dir={dir}
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder={t("address_placeholder")}
+                  rows={3}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4637d] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-2 text-sm">
+                  📍 رابط الموقع على قوقل ماب (اختياري)
+                </label>
+                <input
+                  type="url"
+                  dir="ltr"
+                  value={locationUrl}
+                  onChange={(e) => setLocationUrl(e.target.value)}
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#d4637d] text-left"
+                />
+                <p className="text-xs text-gray-400 mt-1.5">
+                  يسهّل على مندوب التوصيل الوصول لموقعك بدقة
+                </p>
+              </div>
+            </>
           )}
 
           <div>

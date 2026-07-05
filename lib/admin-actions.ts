@@ -185,6 +185,7 @@ export async function createOrder(
     customer_phone: string;
     delivery_type: string;
     address?: string | null;
+    location_url?: string | null;
     total: number;
     delivery_fee: number;
     notes?: string | null;
@@ -203,6 +204,7 @@ export async function createOrder(
       customer_phone: order.customer_phone,
       delivery_type: order.delivery_type,
       address: order.address || null,
+      location_url: order.location_url || null,
       total: order.total,
       delivery_fee: order.delivery_fee,
       status: "pending",
@@ -233,7 +235,23 @@ export async function createOrder(
   return orderData;
 }
 
-/** 8. إحصائيات لوحة التحكم **/
+/** 8. إدارة الطلبات من لوحة الأدمن **/
+export async function getOrdersAdmin() {
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*, order_items(*)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateOrderStatus(id: string, status: string) {
+  const { error } = await supabaseAdmin.from("orders").update({ status }).eq("id", id);
+  if (error) throw error;
+  revalidatePath("/admin");
+}
+
+/** 9. إحصائيات لوحة التحكم **/
 export async function getDashboardStats() {
   const [
     { count: ordersCount, error: ordersError },
@@ -272,4 +290,15 @@ export async function getDashboardStats() {
     visitsCount: visitsCount || 0,
     topProduct,
   };
+}
+
+// يصفّر عداد الزيارات بالكامل (يحذف كل السجلات من جدول site_visits)
+// مفيد بعد تفعيل فلترة البوتات/أدوات المراقبة عشان نبدأ العد من جديد بأرقام دقيقة
+export async function resetVisitsCount() {
+  const { error } = await supabaseAdmin
+    .from("site_visits")
+    .delete()
+    .gte("created_at", "1900-01-01");
+  if (error) throw error;
+  revalidatePath("/admin");
 }
