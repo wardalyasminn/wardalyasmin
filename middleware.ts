@@ -46,13 +46,17 @@ export async function middleware(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || ''
 
     if (!isBotOrMonitor(userAgent)) {
+      // ملاحظة مهمة: .then(onSuccess, onError) وليس .then().catch()
+      // لأن النوع المرجع هنا PromiseLike وليس Promise كامل، و.catch() غير مدعوم عليه
       supabaseAdmin
         .from('site_visits')
         .insert({})
-        .then(() => {})
-        .catch(() => {
-          // تجاهل أي خطأ حتى ما يأثر على تجربة المستخدم
-        })
+        .then(
+          () => {},
+          () => {
+            // تجاهل أي خطأ حتى ما يأثر على تجربة المستخدم
+          }
+        )
     }
 
     return response
