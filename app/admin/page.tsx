@@ -26,3 +26,27 @@ export default async function AdminPage() {
     />
   )
 }
+import {
+  getProductsAdmin,
+  getCategoriesAdmin,
+  getSettingsAdmin,
+  getPaymentMethodsAdmin,
+  getOrdersAdmin,
+} from '@/lib/admin-actions'
+const [products, categories, settings, paymentMethods, orders] = await Promise.all([
+  getProductsAdmin(),
+  getCategoriesAdmin(),
+  getSettingsAdmin(),
+  getPaymentMethodsAdmin(),
+  getOrdersAdmin(),
+])
+
+return (
+  <AdminDashboard
+    initialProducts={products}
+    initialCategories={categories}
+    initialSettings={settings}
+    initialPaymentMethods={paymentMethods}
+    initialOrders={orders}
+  />
+)

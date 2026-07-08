@@ -265,3 +265,32 @@ export async function getDashboardStats() {
     topProduct,
   };
 }
+/** 9. إدارة الطلبات (لوحة التحكم) **/
+export async function getOrdersAdmin() {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*, order_items(*)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateOrderStatus(id: string, newStatus: string) {
+  const { error } = await supabaseAdmin
+    .from("orders")
+    .update({ status: newStatus })
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/admin");
+}
+
+export async function resetVisitsCount() {
+  // ⚠️ افترضت وجود عمود created_at بجدول site_visits — تأكدي من الاسم قبل الرفع
+  const { error } = await supabaseAdmin
+    .from("site_visits")
+    .delete()
+    .gte("created_at", "1970-01-01");
+  if (error) throw error;
+  revalidatePath("/admin");
+}
