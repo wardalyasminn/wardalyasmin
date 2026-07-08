@@ -181,6 +181,7 @@ export async function createOrder(
     customer_phone: string;
     delivery_type: string;
     address?: string | null;
+    location_url?: string | null;
     total: number;
     delivery_fee: number;
     notes?: string | null;
@@ -199,6 +200,7 @@ export async function createOrder(
       customer_phone: order.customer_phone,
       delivery_type: order.delivery_type,
       address: order.address || null,
+      location_url: order.location_url || null,
       total: order.total,
       delivery_fee: order.delivery_fee,
       status: "pending",
