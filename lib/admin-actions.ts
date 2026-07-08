@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "./supabase-server";
 import { supabaseAdmin } from "./supabase";
 import { revalidatePath } from "next/cache";
 
-/** 1. جلب البيانات للأدمن (Getters) - قراءة فقط، لا تحتاج صلاحيات كتابة **/
+/** 1. جلب البيانات للأدمن (Getters) - قراءة فقط **/
 export async function getProductsAdmin() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -32,6 +32,16 @@ export async function getSettingsAdmin(): Promise<Record<string, string>> {
 export async function getPaymentMethodsAdmin() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.from("payment_methods").select("*");
+  if (error) throw error;
+  return data || [];
+}
+
+// الطلبات محمية بالكامل بـ RLS (بدون سياسة قراءة عامة)، فلازم نستخدم supabaseAdmin لجلبها بالأدمن
+export async function getOrdersAdmin() {
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*, order_items(*)")
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return data || [];
 }
@@ -164,9 +174,7 @@ export async function deletePaymentMethod(id: string) {
   revalidatePath("/admin");
 }
 
-/** 7. حفظ الطلبات من صفحة الـ checkout العامة **/
-// ملاحظة: نستخدم supabaseAdmin (service role) هنا تحديدًا لأن هذي الدالة تُستدعى
-// من الموقع العام بدون جلسة أدمن، فلازم تتجاوز أي قيود RLS.
+/** 7. إدارة الطلبات **/
 export async function createOrder(
   order: {
     customer_name: string;
@@ -221,6 +229,12 @@ export async function createOrder(
   return orderData;
 }
 
+export async function updateOrderStatus(id: string, status: string) {
+  const { error } = await supabaseAdmin.from("orders").update({ status }).eq("id", id);
+  if (error) throw error;
+  revalidatePath("/admin");
+}
+
 /** 8. إحصائيات لوحة التحكم **/
 export async function getDashboardStats() {
   const [
@@ -260,4 +274,14 @@ export async function getDashboardStats() {
     visitsCount: visitsCount || 0,
     topProduct,
   };
+}
+
+// يمسح كل سجلات الزيارات (تصفير العداد) - يُستخدم من زر بلوحة الإحصائيات
+export async function resetVisitsCount() {
+  const { error } = await supabaseAdmin
+    .from("site_visits")
+    .delete()
+    .not("id", "is", null); // يحذف كل الصفوف
+  if (error) throw error;
+  revalidatePath("/admin");
 }
