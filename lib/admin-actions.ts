@@ -1,26 +1,22 @@
 "use server";
-import { createSupabaseServerClient } from "./supabase-server";
 import { supabaseAdmin } from "./supabase";
 import { revalidatePath } from "next/cache";
 
 /** 1. جلب البيانات للأدمن (Getters) **/
 export async function getProductsAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+  const { data, error } = await supabaseAdmin.from("products").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   return data || [];
 }
 
 export async function getCategoriesAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("categories").select("*").order("name");
+  const { data, error } = await supabaseAdmin.from("categories").select("*").order("name");
   if (error) throw error;
   return data || [];
 }
 
 export async function getSettingsAdmin(): Promise<Record<string, string>> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("settings").select("*");
+  const { data, error } = await supabaseAdmin.from("settings").select("*");
   if (error) throw error;
   const result: Record<string, string> = {};
   (data || []).forEach((row: any) => {
@@ -30,15 +26,13 @@ export async function getSettingsAdmin(): Promise<Record<string, string>> {
 }
 
 export async function getPaymentMethodsAdmin() {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("payment_methods").select("*");
+  const { data, error } = await supabaseAdmin.from("payment_methods").select("*");
   if (error) throw error;
   return data || [];
 }
 
 /** 2. رفع الصور من المعرض (Storage) **/
 export async function uploadImage(formData: FormData) {
-  const supabase = await createSupabaseServerClient();
   const file = formData.get('file') as File;
   if (!file) throw new Error("لم يتم اختيار ملف");
 
@@ -59,7 +53,7 @@ export async function uploadImage(formData: FormData) {
     (file.type && file.type !== "" ? file.type : mimeMap[(fileExt || "").toLowerCase()]) ||
     "application/octet-stream";
 
-  const { data, error: uploadError } = await supabase.storage
+  const { data, error: uploadError } = await supabaseAdmin.storage
     .from('images')
     .upload(filePath, file, {
       contentType: resolvedContentType,
@@ -68,7 +62,7 @@ export async function uploadImage(formData: FormData) {
 
   if (uploadError) throw uploadError;
 
-  const { data: { publicUrl } } = supabase.storage
+  const { data: { publicUrl } } = supabaseAdmin.storage
     .from('images')
     .getPublicUrl(filePath);
 
@@ -79,8 +73,6 @@ export async function uploadImage(formData: FormData) {
 export async function updateSettingsBulk(
   settings: { key: string; value: string }[] | Record<string, any>
 ) {
-  const supabase = await createSupabaseServerClient();
-
   let settingsArray: { key: string; value: string }[];
 
   if (Array.isArray(settings)) {
@@ -92,7 +84,7 @@ export async function updateSettingsBulk(
     }));
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("settings")
     .upsert(settingsArray, { onConflict: "key" });
 
@@ -102,16 +94,14 @@ export async function updateSettingsBulk(
 }
 
 export async function saveSetting(key: string, value: string) {
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("settings").upsert({ key, value }, { onConflict: "key" });
+  const { error } = await supabaseAdmin.from("settings").upsert({ key, value }, { onConflict: "key" });
   if (error) throw error;
   revalidatePath("/");
 }
 
 /** 4. إدارة المنتجات **/
 export async function saveProduct(product: any) {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("products").upsert(product).select();
+  const { data, error } = await supabaseAdmin.from("products").upsert(product).select();
   if (error) throw error;
   revalidatePath("/");
   revalidatePath("/admin");
@@ -119,16 +109,14 @@ export async function saveProduct(product: any) {
 }
 
 export async function deleteProduct(id: string) {
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("products").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("products").delete().eq("id", id);
   if (error) throw error;
   revalidatePath("/");
   revalidatePath("/admin");
 }
 
 export async function toggleProductStatus(id: string, currentStatus: boolean) {
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("products").update({ is_available: !currentStatus }).eq("id", id);
+  const { error } = await supabaseAdmin.from("products").update({ is_available: !currentStatus }).eq("id", id);
   if (error) throw error;
   revalidatePath("/");
   revalidatePath("/admin");
@@ -136,8 +124,7 @@ export async function toggleProductStatus(id: string, currentStatus: boolean) {
 
 /** 5. إدارة التصنيفات **/
 export async function saveCategory(category: any) {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("categories").upsert(category).select();
+  const { data, error } = await supabaseAdmin.from("categories").upsert(category).select();
   if (error) throw error;
   revalidatePath("/");
   revalidatePath("/admin");
@@ -145,8 +132,7 @@ export async function saveCategory(category: any) {
 }
 
 export async function deleteCategory(id: string) {
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("categories").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("categories").delete().eq("id", id);
   if (error) throw error;
   revalidatePath("/");
   revalidatePath("/admin");
@@ -154,24 +140,21 @@ export async function deleteCategory(id: string) {
 
 /** 6. إدارة طرق الدفع **/
 export async function createPaymentMethod(method: any) {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("payment_methods").insert(method).select();
+  const { data, error } = await supabaseAdmin.from("payment_methods").insert(method).select();
   if (error) throw error;
   revalidatePath("/admin");
   return data;
 }
 
 export async function updatePaymentMethod(id: string, method: any) {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("payment_methods").update(method).eq("id", id).select();
+  const { data, error } = await supabaseAdmin.from("payment_methods").update(method).eq("id", id).select();
   if (error) throw error;
   revalidatePath("/admin");
   return data;
 }
 
 export async function deletePaymentMethod(id: string) {
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("payment_methods").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("payment_methods").delete().eq("id", id);
   if (error) throw error;
   revalidatePath("/admin");
 }
@@ -185,7 +168,6 @@ export async function createOrder(
     customer_phone: string;
     delivery_type: string;
     address?: string | null;
-    location_url?: string | null;
     total: number;
     delivery_fee: number;
     notes?: string | null;
@@ -204,7 +186,6 @@ export async function createOrder(
       customer_phone: order.customer_phone,
       delivery_type: order.delivery_type,
       address: order.address || null,
-      location_url: order.location_url || null,
       total: order.total,
       delivery_fee: order.delivery_fee,
       status: "pending",
@@ -235,23 +216,7 @@ export async function createOrder(
   return orderData;
 }
 
-/** 8. إدارة الطلبات من لوحة الأدمن **/
-export async function getOrdersAdmin() {
-  const { data, error } = await supabaseAdmin
-    .from("orders")
-    .select("*, order_items(*)")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data || [];
-}
-
-export async function updateOrderStatus(id: string, status: string) {
-  const { error } = await supabaseAdmin.from("orders").update({ status }).eq("id", id);
-  if (error) throw error;
-  revalidatePath("/admin");
-}
-
-/** 9. إحصائيات لوحة التحكم **/
+/** 8. إحصائيات لوحة التحكم **/
 export async function getDashboardStats() {
   const [
     { count: ordersCount, error: ordersError },
@@ -290,15 +255,4 @@ export async function getDashboardStats() {
     visitsCount: visitsCount || 0,
     topProduct,
   };
-}
-
-// يصفّر عداد الزيارات بالكامل (يحذف كل السجلات من جدول site_visits)
-// مفيد بعد تفعيل فلترة البوتات/أدوات المراقبة عشان نبدأ العد من جديد بأرقام دقيقة
-export async function resetVisitsCount() {
-  const { error } = await supabaseAdmin
-    .from("site_visits")
-    .delete()
-    .gte("created_at", "1900-01-01");
-  if (error) throw error;
-  revalidatePath("/admin");
 }
