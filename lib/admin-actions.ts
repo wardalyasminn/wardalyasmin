@@ -216,7 +216,35 @@ export async function createOrder(
   return orderData;
 }
 
-/** 8. إحصائيات لوحة التحكم **/
+/** 7. جلب الطلبات للأدمن (مع عناصر كل طلب) — يُستخدم بـ app/admin/page.tsx و OrdersManager.tsx **/
+export async function getOrdersAdmin() {
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("*, order_items(*)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/** 8. تحديث حالة الطلب (من لوحة إدارة الطلبات بالأدمن) **/
+export async function updateOrderStatus(id: string, status: string) {
+  const { error } = await supabaseAdmin.from("orders").update({ status }).eq("id", id);
+  if (error) throw error;
+  revalidatePath("/admin");
+}
+
+/** 9. تصفير عداد الزيارات (من لوحة الإحصائيات بالأدمن) **/
+export async function resetVisitsCount() {
+  // نحذف كل الصفوف الحالية بجدول site_visits عشان يرجع العداد صفر
+  const { error } = await supabaseAdmin
+    .from("site_visits")
+    .delete()
+    .not("id", "is", null);
+  if (error) throw error;
+  revalidatePath("/admin");
+}
+
+/** 10. إحصائيات لوحة التحكم **/
 export async function getDashboardStats() {
   const [
     { count: ordersCount, error: ordersError },
