@@ -1,22 +1,26 @@
 "use server";
+import { createSupabaseServerClient } from "./supabase-server";
 import { supabaseAdmin } from "./supabase";
 import { revalidatePath } from "next/cache";
 
-/** 1. جلب البيانات للأدمن (Getters) **/
+/** 1. جلب البيانات للأدمن (Getters) - قراءة فقط، لا تحتاج صلاحيات كتابة **/
 export async function getProductsAdmin() {
-  const { data, error } = await supabaseAdmin.from("products").select("*").order("created_at", { ascending: false });
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   return data || [];
 }
 
 export async function getCategoriesAdmin() {
-  const { data, error } = await supabaseAdmin.from("categories").select("*").order("name");
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("categories").select("*").order("name");
   if (error) throw error;
   return data || [];
 }
 
 export async function getSettingsAdmin(): Promise<Record<string, string>> {
-  const { data, error } = await supabaseAdmin.from("settings").select("*");
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("settings").select("*");
   if (error) throw error;
   const result: Record<string, string> = {};
   (data || []).forEach((row: any) => {
@@ -26,7 +30,8 @@ export async function getSettingsAdmin(): Promise<Record<string, string>> {
 }
 
 export async function getPaymentMethodsAdmin() {
-  const { data, error } = await supabaseAdmin.from("payment_methods").select("*");
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("payment_methods").select("*");
   if (error) throw error;
   return data || [];
 }
@@ -168,7 +173,6 @@ export async function createOrder(
     customer_phone: string;
     delivery_type: string;
     address?: string | null;
-    location_url?: string | null;
     total: number;
     delivery_fee: number;
     notes?: string | null;
@@ -187,7 +191,6 @@ export async function createOrder(
       customer_phone: order.customer_phone,
       delivery_type: order.delivery_type,
       address: order.address || null,
-      location_url: order.location_url || null,
       total: order.total,
       delivery_fee: order.delivery_fee,
       status: "pending",
@@ -218,35 +221,7 @@ export async function createOrder(
   return orderData;
 }
 
-/** 7. جلب الطلبات للأدمن (مع عناصر كل طلب) — يُستخدم بـ app/admin/page.tsx و OrdersManager.tsx **/
-export async function getOrdersAdmin() {
-  const { data, error } = await supabaseAdmin
-    .from("orders")
-    .select("*, order_items(*)")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return data || [];
-}
-
-/** 8. تحديث حالة الطلب (من لوحة إدارة الطلبات بالأدمن) **/
-export async function updateOrderStatus(id: string, status: string) {
-  const { error } = await supabaseAdmin.from("orders").update({ status }).eq("id", id);
-  if (error) throw error;
-  revalidatePath("/admin");
-}
-
-/** 9. تصفير عداد الزيارات (من لوحة الإحصائيات بالأدمن) **/
-export async function resetVisitsCount() {
-  // نحذف كل الصفوف الحالية بجدول site_visits عشان يرجع العداد صفر
-  const { error } = await supabaseAdmin
-    .from("site_visits")
-    .delete()
-    .not("id", "is", null);
-  if (error) throw error;
-  revalidatePath("/admin");
-}
-
-/** 10. إحصائيات لوحة التحكم **/
+/** 8. إحصائيات لوحة التحكم **/
 export async function getDashboardStats() {
   const [
     { count: ordersCount, error: ordersError },
